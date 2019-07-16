@@ -5,10 +5,23 @@ use ray::Ray;
 use std::fs;
 use vec3::Vec3;
 
+fn hit_sphere(center: Vec3, radius: f64, r: Ray) -> bool {
+    let oc = r.origin - center;
+    let a = r.direction.dot(r.direction);
+    let b = 2.0 * oc.dot(r.direction);
+    let c = oc.dot(oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant > 0.0
+}
+
 fn color(r: Ray) -> Vec3 {
-    let unit_direction = r.direction.unit();
-    let t = 0.5 * (unit_direction.y + 1.0);
-    Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
+    if hit_sphere(Vec3::new(0.0, 0.0, -1.0), 0.5, r) {
+        Vec3::new(1.0, 0.0, 0.0)
+    } else {
+        let unit_direction = r.direction.unit();
+        let t = 0.5 * (unit_direction.y + 1.0);
+        Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
+    }
 }
 
 fn main() {
