@@ -1,22 +1,17 @@
+mod hitable;
 mod ray;
 mod vec3;
 
+use hitable::{Hitable, HitableList, Sphere};
 use ray::Ray;
 use std::fs;
 use vec3::Vec3;
 
-fn hit_sphere(center: Vec3, radius: f64, r: Ray) -> bool {
-    let oc = r.origin - center;
-    let a = r.direction.dot(r.direction);
-    let b = 2.0 * oc.dot(r.direction);
-    let c = oc.dot(oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
-    discriminant > 0.0
-}
-
-fn color(r: Ray) -> Vec3 {
-    if hit_sphere(Vec3::new(0.0, 0.0, -1.0), 0.5, r) {
-        Vec3::new(1.0, 0.0, 0.0)
+fn color(r: Ray, world: &HitableList) -> Vec3 {
+    let res = world.hit(r, 0.0, std::f64::INFINITY);
+    if res.0 {
+        let n = res.1.normal;
+        Vec3::new(n.x + 1.0, n.y + 1.0, n.z + 1.0) * 0.5
     } else {
         let unit_direction = r.direction.unit();
         let t = 0.5 * (unit_direction.y + 1.0);
@@ -36,12 +31,20 @@ fn main() {
     let vertical = Vec3::new(0.0, 2.0, 0.0);
     let origin = Vec3::new(0.0, 0.0, 0.0);
 
+    let hitable1 = Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5);
+    let hitable2 = Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0);
+
+    let world = HitableList::new(vec![
+        Box::new(hitable1),
+        Box::new(hitable2),
+    ]);
+
     for h in (0..height).rev() {
         for w in 0..width {
             let u = w as f64 / width as f64;
             let v = h as f64 / height as f64;
             let r = Ray::new(origin, lower_left_corner + horizontal * u + vertical * v);
-            let col = color(r);
+            let col = color(r, &world);
             let ir = (max_color as f64 * col.x) as usize;
             let ig = (max_color as f64 * col.y) as usize;
             let ib = (max_color as f64 * col.z) as usize;
