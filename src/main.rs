@@ -1,4 +1,5 @@
 use std::fs;
+mod vec3;
 
 fn main() {
     let width = 300;
