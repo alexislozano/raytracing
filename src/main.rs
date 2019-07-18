@@ -11,11 +11,22 @@ use camera::Camera;
 
 use rand::prelude::*;
 
+fn random_in_unit_sphere() -> Vec3 {
+    let mut rng = rand::thread_rng();
+    let mut p = Vec3::new(1.0, 1.0, 1.0);
+    while p.squared_length() >= 1.0 {
+        p = Vec3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>()) * 2.0 - Vec3::new(1.0, 1.0, 1.0);
+    }
+    p
+}
+
 fn color(r: &Ray, world: &HitableList) -> Vec3 {
-    let res = world.hit(r, 0.0, std::f64::INFINITY);
+    let res = world.hit(r, 0.001, std::f64::INFINITY);
     if res.0 {
         let n = res.1.normal;
-        Vec3::new(n.x + 1.0, n.y + 1.0, n.z + 1.0) * 0.5
+        let p = res.1.p;
+        let target = p + n + random_in_unit_sphere();
+        color(&Ray::new(p, target - p), world) * 0.5
     } else {
         let unit_direction = r.direction.unit();
         let t = 0.5 * (unit_direction.y + 1.0);
@@ -58,6 +69,7 @@ fn main() {
                 col = col + color(&r, &world);
             }
             col = col / ray_per_pixel as f64;
+            col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
             let ir = (max_color as f64 * col.x) as usize;
             let ig = (max_color as f64 * col.y) as usize;
             let ib = (max_color as f64 * col.z) as usize;
