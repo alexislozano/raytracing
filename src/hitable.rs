@@ -14,7 +14,7 @@ impl HitRecord {
 }
 
 pub trait Hitable {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> (bool, HitRecord);
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> (bool, HitRecord);
 }
 
 pub struct Sphere {
@@ -29,7 +29,7 @@ impl Sphere {
 }
 
 impl Hitable for Sphere {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> (bool, HitRecord) {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> (bool, HitRecord) {
         let mut rec = HitRecord::new(t_max, Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
         let oc = r.origin - self.center;
         let a = r.direction.dot(r.direction);
@@ -71,7 +71,7 @@ impl HitableList {
 }
 
 impl Hitable for HitableList {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> (bool, HitRecord) {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> (bool, HitRecord) {
         let mut hit_anything = false;
         let mut closest_so_far = t_max;
         let mut rec = HitRecord::new(
