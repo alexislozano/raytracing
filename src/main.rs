@@ -13,46 +13,17 @@ use vec3::Vec3;
 
 use rand::prelude::*;
 
-fn random_in_unit_sphere() -> Vec3 {
-    let mut rng = rand::thread_rng();
-    let mut p = Vec3::new(1.0, 1.0, 1.0);
-    while p.squared_length() >= 1.0 {
-        p = Vec3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>()) * 2.0
-            - Vec3::new(1.0, 1.0, 1.0);
-    }
-    p
-}
-
-fn reflect(v: Vec3, n: Vec3) -> Vec3 {
-    v - n * v.dot(n) * 2.0
-}
-
 fn color(r: &Ray, world: &HitableList, depth: u32) -> Vec3 {
     let (hit_record, material) = world.hit(r, 0.001, std::f64::INFINITY);
     match hit_record {
         Some(hit_record) => {
             let n = hit_record.normal();
             let p = hit_record.p();
-            let target = p + n + random_in_unit_sphere();
             match material {
                 Some(material) => {
-                    let (scattered, attenuation, b) = match material {
-                        Material::Lambertian { attenuation } => {
-                            (Ray::new(p, target - p), attenuation, true)
-                        }
-                        Material::Metal {
-                            attenuation,
-                            fuzziness,
-                        } => {
-                            let reflected = reflect(r.direction().unit(), n);
-                            let scattered =
-                                Ray::new(p, reflected + random_in_unit_sphere() * *fuzziness);
-                            let b = scattered.direction().dot(n) > 0.0;
-                            (scattered, attenuation, b)
-                        }
-                    };
+                    let (scattered, attenuation, b) = material.scatter(r, n, p);
                     if depth < 50 && b {
-                        *attenuation * color(&scattered, world, depth + 1)
+                        attenuation * color(&scattered, world, depth + 1)
                     } else {
                         Vec3::new(0.0, 0.0, 0.0)
                     }
@@ -79,30 +50,34 @@ fn main() {
     let mut pic = format!("P3\n{} {}\n{}\n", width, height, max_color);
 
     let material1 = Material::Lambertian {
-        attenuation: Vec3::new(0.8, 0.3, 0.3),
+        attenuation: Vec3::new(0.1, 0.2, 0.5),
     };
     let material2 = Material::Lambertian {
         attenuation: Vec3::new(0.8, 0.8, 0.0),
     };
     let material3 = Material::Metal {
         attenuation: Vec3::new(0.8, 0.6, 0.2),
-        fuzziness: 0.0,
+        fuzziness: 0.3,
     };
-    let material4 = Material::Metal {
-        attenuation: Vec3::new(0.8, 0.8, 0.8),
-        fuzziness: 0.5,
+    let material4 = Material::Dielectric {
+        refraction: 1.5,
+    };
+    let material5 = Material::Dielectric {
+        refraction: 1.5,
     };
 
     let hitable1 = Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, material1);
     let hitable2 = Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, material2);
     let hitable3 = Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, material3);
     let hitable4 = Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, material4);
+    let hitable5 = Sphere::new(Vec3::new(-1.0, 0.0, -1.0), -0.45, material5);
 
     let world = HitableList::new(vec![
         Box::new(hitable1),
         Box::new(hitable2),
         Box::new(hitable3),
         Box::new(hitable4),
+        Box::new(hitable5),
     ]);
 
     let camera = Camera::new(
