@@ -80,12 +80,19 @@ fn main() {
         Box::new(hitable5),
     ]);
 
+    let lookfrom = Vec3::new(3.0, 3.0, 2.0);
+    let lookat = Vec3::new(0.0, 0.0, -1.0);
+    let dist_to_focus = (lookfrom - lookat).length();
+    let aperture = 2.0;
+
     let camera = Camera::new(
-        Vec3::new(-2.0, 2.0, 1.0),
-        Vec3::new(0.0, 0.0, -1.0),
+        lookfrom,
+        lookat,
         Vec3::new(0.0, 1.0, 0.0),
         20.0, 
         width as f64 / height as f64,
+        aperture,
+        dist_to_focus,
     );
 
     for h in (0..height).rev() {
