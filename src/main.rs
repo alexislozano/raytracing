@@ -81,10 +81,11 @@ fn main() {
     ]);
 
     let camera = Camera::new(
-        Vec3::new(0.0, 0.0, 0.0),
-        Vec3::new(4.0, 0.0, 0.0),
-        Vec3::new(0.0, 2.0, 0.0),
-        Vec3::new(-2.0, -1.0, -1.0),
+        Vec3::new(-2.0, 2.0, 1.0),
+        Vec3::new(0.0, 0.0, -1.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        20.0, 
+        width as f64 / height as f64,
     );
 
     for h in (0..height).rev() {
