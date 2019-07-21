@@ -12,6 +12,7 @@ use std::fs;
 use vec3::Vec3;
 
 use rand::prelude::*;
+use rayon::prelude::*;
 
 fn color(r: &Ray, world: &Hitable, depth: u32) -> Vec3 {
     let (hit_record, material) = world.hit(r, 0.001, std::f64::INFINITY);
@@ -101,8 +102,7 @@ fn random_scene() -> HitableList {
 }
 
 fn main() {
-    let mut rng = rand::thread_rng();
-
+    println!(":: Generating the scene");
     let world = random_scene();
 
     let width = 200;
@@ -110,6 +110,7 @@ fn main() {
     let ray_per_pixel = 100;
     let max_color = 255;
 
+    println!(":: Generating the image");
     let mut pic = format!("P3\n{} {}\n{}\n", width, height, max_color);
 
     let lookfrom = Vec3::new(16.0, 2.0, 4.0);
@@ -127,8 +128,9 @@ fn main() {
         dist_to_focus,
     );
 
-    for h in (0..height).rev() {
-        for w in 0..width {
+    let pixels = (0..height).into_par_iter().rev().map(|h| {
+        (0..width).into_par_iter().map(|w| {
+            let mut rng = rand::thread_rng();
             let mut col = Vec3::new(0.0, 0.0, 0.0);
             for _ in 0..ray_per_pixel {
                 let u = (w as f64 + rng.gen::<f64>()) / width as f64;
@@ -141,10 +143,13 @@ fn main() {
             let ir = (max_color as f64 * col.x) as usize;
             let ig = (max_color as f64 * col.y) as usize;
             let ib = (max_color as f64 * col.z) as usize;
-            pic = format!("{}{} {} {}\n", &pic, ir, ig, ib);
-        }
-    }
+            format!("{} {} {}\n", ir, ig, ib)
+        }).collect::<Vec<String>>().join("")
+    }).collect::<Vec<String>>().join("");
 
+    pic = format!("{}{}", &pic, pixels);
+
+    println!(":: Writing the image");
     match fs::write("output.ppm", pic) {
         Err(_) => eprintln!("Could not generate the picture"),
         Ok(_) => (),
