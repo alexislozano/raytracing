@@ -27,7 +27,7 @@ impl HitRecord {
 }
 
 pub trait Hitable: Sync {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> (Option<HitRecord>, Option<&Material>);
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<(HitRecord, &Material)>;
 }
 
 pub struct Sphere {
@@ -59,7 +59,7 @@ impl Sphere {
 }
 
 impl Hitable for Sphere {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> (Option<HitRecord>, Option<&Material>) {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<(HitRecord, &Material)> {
         let oc = r.origin() - self.center();
         let a = r.direction().dot(r.direction());
         let b = oc.dot(r.direction());
@@ -71,16 +71,16 @@ impl Hitable for Sphere {
             if t1 < t_max && t1 > t_min {
                 let p = r.point_at_parameter(t1);
                 let n = (p - self.center()) / self.radius();
-                (Some(HitRecord::new(t1, p, n)), Some(self.material()))
+                Some((HitRecord::new(t1, p, n), self.material()))
             } else if t2 < t_max && t2 > t_min {
                 let p = r.point_at_parameter(t2);
                 let n = (p - self.center()) / self.radius();
-                (Some(HitRecord::new(t2, p, n)), Some(self.material()))
+                Some((HitRecord::new(t2, p, n), self.material()))
             } else {
-                (None, None)
+                None
             }
         } else {
-            (None, None)
+            None
         }
     }
 }
@@ -96,38 +96,23 @@ impl HitableList {
 }
 
 impl Hitable for HitableList {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> (Option<HitRecord>, Option<&Material>) {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<(HitRecord, &Material)> {
         let mut closest_so_far = t_max;
-        let mut res: (Option<HitRecord>, Option<&Material>) = (None, None);
+        let mut res = None;
         for h in self.list.iter() {
-            let (hit_record, material) = h.hit(r, t_min, closest_so_far);
-            match hit_record {
-                Some(hit_record) => {
+            match h.hit(r, t_min, closest_so_far) {
+                Some((hit_record, material)) => {
                     closest_so_far = hit_record.t();
-                    match material {
-                        Some(material) => {
-                            res = (
-                                Some(HitRecord::new(
-                                    hit_record.t(),
-                                    hit_record.p(),
-                                    hit_record.normal(),
-                                )),
-                                Some(material),
-                            );
-                        }
-                        None => {
-                            res = (
-                                Some(HitRecord::new(
-                                    hit_record.t(),
-                                    hit_record.p(),
-                                    hit_record.normal(),
-                                )),
-                                None,
-                            );
-                        }
-                    }
-                }
-                None => (),
+                    res = Some((
+                        HitRecord::new(
+                            hit_record.t(),
+                            hit_record.p(),
+                            hit_record.normal(),
+                        ),
+                        material,
+                    ))
+                },
+                None => ()
             };
         }
         res

@@ -15,23 +15,17 @@ use rand::prelude::*;
 use rayon::prelude::*;
 
 fn color(r: &Ray, world: &Hitable, depth: u32) -> Vec3 {
-    let (hit_record, material) = world.hit(r, 0.001, std::f64::INFINITY);
-    match hit_record {
-        Some(hit_record) => {
+    match world.hit(r, 0.001, std::f64::INFINITY) {
+        Some((hit_record, material)) => {
             let n = hit_record.normal();
             let p = hit_record.p();
-            match material {
-                Some(material) => {
-                    let (scattered, attenuation, b) = material.scatter(r, n, p);
-                    if depth < 50 && b {
-                        attenuation * color(&scattered, world, depth + 1)
-                    } else {
-                        Vec3::new(0.0, 0.0, 0.0)
-                    }
-                }
-                None => Vec3::new(0.0, 0.0, 0.0),
+            let (scattered, attenuation, b) = material.scatter(r, n, p);
+            if depth < 50 && b {
+                attenuation * color(&scattered, world, depth + 1)
+            } else {
+                Vec3::new(0.0, 0.0, 0.0)
             }
-        }
+        },
         None => {
             let unit_direction = r.direction().unit();
             let t = 0.5 * (unit_direction.y + 1.0);
