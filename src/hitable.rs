@@ -104,15 +104,11 @@ impl Hitable for HitableList {
                 Some((hit_record, material)) => {
                     closest_so_far = hit_record.t();
                     res = Some((
-                        HitRecord::new(
-                            hit_record.t(),
-                            hit_record.p(),
-                            hit_record.normal(),
-                        ),
+                        HitRecord::new(hit_record.t(), hit_record.p(), hit_record.normal()),
                         material,
                     ))
-                },
-                None => ()
+                }
+                None => (),
             };
         }
         res

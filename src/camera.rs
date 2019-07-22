@@ -24,7 +24,15 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(lookfrom: Vec3, lookat: Vec3, vup: Vec3, vfov: f64, aspect: f64, aperture: f64, focus_dist: f64) -> Camera {
+    pub fn new(
+        lookfrom: Vec3,
+        lookat: Vec3,
+        vup: Vec3,
+        vfov: f64,
+        aspect: f64,
+        aperture: f64,
+        focus_dist: f64,
+    ) -> Camera {
         let lens_radius = aperture / 2.0;
         let theta = vfov * PI / 180.0;
         let half_height = (theta / 2.0).tan();
@@ -33,7 +41,8 @@ impl Camera {
         let w = (lookfrom - lookat).unit();
         let u = vup.cross(w).unit();
         let v = w.cross(u);
-        let lower_left_corner = origin - u * half_width * focus_dist - v * half_height * focus_dist - w * focus_dist; 
+        let lower_left_corner =
+            origin - u * half_width * focus_dist - v * half_height * focus_dist - w * focus_dist;
         let horizontal = u * half_width * focus_dist * 2.0;
         let vertical = v * half_height * focus_dist * 2.0;
         Camera {
@@ -50,7 +59,7 @@ impl Camera {
     fn origin(&self) -> Vec3 {
         self.origin
     }
-    
+
     fn horizontal(&self) -> Vec3 {
         self.horizontal
     }
@@ -80,7 +89,9 @@ impl Camera {
         let offset = self.u() * rd.x() + self.v() * rd.y();
         Ray::new(
             self.origin() + offset,
-            self.lower_left_corner() + self.horizontal() * s + self.vertical() * t - self.origin() - offset
+            self.lower_left_corner() + self.horizontal() * s + self.vertical() * t
+                - self.origin()
+                - offset,
         )
     }
 }

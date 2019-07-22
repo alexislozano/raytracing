@@ -25,7 +25,7 @@ fn color(r: &Ray, world: &Hitable, depth: u32) -> Vec3 {
             } else {
                 Vec3::new(0.0, 0.0, 0.0)
             }
-        },
+        }
         None => {
             let unit_direction = r.direction().unit();
             let t = 0.5 * (unit_direction.y + 1.0);
@@ -40,57 +40,73 @@ fn random_scene() -> HitableList {
     list.push(Box::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        Material::Lambertian { attenuation: Vec3::new(0.5, 0.5, 0.5) }
+        Material::Lambertian {
+            attenuation: Vec3::new(0.5, 0.5, 0.5),
+        },
     )));
     for a in -11..11 {
         for b in -11..11 {
             let choose_mat = rng.gen::<f64>();
-            let center = Vec3::new(a as f64 + 0.9 * rng.gen::<f64>(), 0.2, b as f64 + 0.9 * rng.gen::<f64>());
+            let center = Vec3::new(
+                a as f64 + 0.9 * rng.gen::<f64>(),
+                0.2,
+                b as f64 + 0.9 * rng.gen::<f64>(),
+            );
             if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 if choose_mat < 0.8 {
                     list.push(Box::new(Sphere::new(
                         center,
                         0.2,
-                        Material::Lambertian { attenuation: Vec3::new(
-                            rng.gen::<f64>() * rng.gen::<f64>(),
-                            rng.gen::<f64>() * rng.gen::<f64>(),
-                            rng.gen::<f64>() * rng.gen::<f64>(), 
-                        )}
+                        Material::Lambertian {
+                            attenuation: Vec3::new(
+                                rng.gen::<f64>() * rng.gen::<f64>(),
+                                rng.gen::<f64>() * rng.gen::<f64>(),
+                                rng.gen::<f64>() * rng.gen::<f64>(),
+                            ),
+                        },
                     )));
                 } else if choose_mat < 0.95 {
                     list.push(Box::new(Sphere::new(
                         center,
                         0.2,
-                        Material::Metal { attenuation: Vec3::new(
-                            0.5 * (1.0 + rng.gen::<f64>()),
-                            0.5 * (1.0 + rng.gen::<f64>()),
-                            0.5 * (1.0 + rng.gen::<f64>()), 
-                        ), fuzziness: 0.5 * rng.gen::<f64>() }
+                        Material::Metal {
+                            attenuation: Vec3::new(
+                                0.5 * (1.0 + rng.gen::<f64>()),
+                                0.5 * (1.0 + rng.gen::<f64>()),
+                                0.5 * (1.0 + rng.gen::<f64>()),
+                            ),
+                            fuzziness: 0.5 * rng.gen::<f64>(),
+                        },
                     )));
                 } else {
                     list.push(Box::new(Sphere::new(
                         center,
                         0.2,
-                        Material::Dielectric { refraction: 1.5 }
+                        Material::Dielectric { refraction: 1.5 },
                     )));
                 }
-            } 
+            }
         }
     }
     list.push(Box::new(Sphere::new(
         Vec3::new(0.0, 1.0, 0.0),
         1.0,
-        Material::Dielectric { refraction: 1.5 }
+        Material::Dielectric { refraction: 1.5 },
     )));
     list.push(Box::new(Sphere::new(
         Vec3::new(-4.0, 1.0, 0.0),
         1.0,
-        Material::Lambertian { attenuation: Vec3::new(0.4, 0.2, 0.1) }
+        Material::Lambertian {
+            attenuation: Vec3::new(0.4, 0.2, 0.1),
+        },
     )));
     list.push(Box::new(Sphere::new(
         Vec3::new(4.0, 1.0, 0.0),
         1.0,
-        Material::Metal { attenuation: Vec3::new(0.7, 0.6, 0.5), fuzziness: 0.0 }
+        Material::Metal {
+            attenuation: Vec3::new(0.7, 0.6, 0.5),
+            fuzziness: 0.0,
+        },
     )));
     HitableList::new(list)
 }
@@ -116,30 +132,39 @@ fn main() {
         lookfrom,
         lookat,
         Vec3::new(0.0, 1.0, 0.0),
-        15.0, 
+        15.0,
         width as f64 / height as f64,
         aperture,
         dist_to_focus,
     );
 
-    let pixels = (0..height).into_par_iter().rev().map(|h| {
-        (0..width).into_par_iter().map(|w| {
-            let mut rng = rand::thread_rng();
-            let mut col = Vec3::new(0.0, 0.0, 0.0);
-            for _ in 0..ray_per_pixel {
-                let u = (w as f64 + rng.gen::<f64>()) / width as f64;
-                let v = (h as f64 + rng.gen::<f64>()) / height as f64;
-                let r = &camera.get_ray(u, v);
-                col = col + color(&r, &world, 0);
-            }
-            col = col / ray_per_pixel as f64;
-            col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
-            let ir = (max_color as f64 * col.x) as usize;
-            let ig = (max_color as f64 * col.y) as usize;
-            let ib = (max_color as f64 * col.z) as usize;
-            format!("{} {} {}\n", ir, ig, ib)
-        }).collect::<Vec<String>>().join("")
-    }).collect::<Vec<String>>().join("");
+    let pixels = (0..height)
+        .into_par_iter()
+        .rev()
+        .map(|h| {
+            (0..width)
+                .into_par_iter()
+                .map(|w| {
+                    let mut rng = rand::thread_rng();
+                    let mut col = Vec3::new(0.0, 0.0, 0.0);
+                    for _ in 0..ray_per_pixel {
+                        let u = (w as f64 + rng.gen::<f64>()) / width as f64;
+                        let v = (h as f64 + rng.gen::<f64>()) / height as f64;
+                        let r = &camera.get_ray(u, v);
+                        col = col + color(&r, &world, 0);
+                    }
+                    col = col / ray_per_pixel as f64;
+                    col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
+                    let ir = (max_color as f64 * col.x) as usize;
+                    let ig = (max_color as f64 * col.y) as usize;
+                    let ib = (max_color as f64 * col.z) as usize;
+                    format!("{} {} {}\n", ir, ig, ib)
+                })
+                .collect::<Vec<String>>()
+                .join("")
+        })
+        .collect::<Vec<String>>()
+        .join("");
 
     pic = format!("{}{}", &pic, pixels);
 

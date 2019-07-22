@@ -1,5 +1,5 @@
-use crate::vec3::Vec3;
 use crate::ray::Ray;
+use crate::vec3::Vec3;
 use rand::prelude::*;
 
 fn random_in_unit_sphere() -> Vec3 {
@@ -42,27 +42,30 @@ impl Material {
     pub fn scatter(&self, r: &Ray, n: Vec3, p: Vec3) -> (Ray, Vec3, bool) {
         let target = p + n + random_in_unit_sphere();
         match self {
-            Material::Lambertian { attenuation } => {
-                (Ray::new(p, target - p), *attenuation, true)
-            }
+            Material::Lambertian { attenuation } => (Ray::new(p, target - p), *attenuation, true),
             Material::Metal {
                 attenuation,
                 fuzziness,
             } => {
                 let reflected = reflect(r.direction().unit(), n);
-                let scattered =
-                    Ray::new(p, reflected + random_in_unit_sphere() * *fuzziness);
+                let scattered = Ray::new(p, reflected + random_in_unit_sphere() * *fuzziness);
                 let b = scattered.direction().dot(n) > 0.0;
                 (scattered, *attenuation, b)
             }
-            Material::Dielectric {
-                refraction,
-            } => {
+            Material::Dielectric { refraction } => {
                 let reflected = reflect(r.direction(), n);
                 let (outward_normal, ni_over_nt, cosine) = if r.direction().dot(n) > 0.0 {
-                    (-n, *refraction, refraction * r.direction().dot(n) / r.direction().length())
+                    (
+                        -n,
+                        *refraction,
+                        refraction * r.direction().dot(n) / r.direction().length(),
+                    )
                 } else {
-                    (n, 1.0 / refraction, -(r.direction().dot(n)) / r.direction().length())
+                    (
+                        n,
+                        1.0 / refraction,
+                        -(r.direction().dot(n)) / r.direction().length(),
+                    )
                 };
                 let scattered = match refract(r.direction(), outward_normal, ni_over_nt) {
                     Some(refracted) => {
@@ -73,8 +76,8 @@ impl Material {
                         } else {
                             Ray::new(p, refracted)
                         }
-                    },
-                    None => Ray::new(p, reflected)
+                    }
+                    None => Ray::new(p, reflected),
                 };
                 let attenuation = Vec3::new(1.0, 1.0, 1.0);
                 (scattered, attenuation, true)
