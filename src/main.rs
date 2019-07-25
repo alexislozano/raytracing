@@ -48,9 +48,9 @@ fn random_scene() -> HitableList {
         for b in -11..11 {
             let choose_mat = rng.gen::<f64>();
             let center = Vec3::new(
-                a as f64 + 0.9 * rng.gen::<f64>(),
+                f64::from(a) + 0.9 * rng.gen::<f64>(),
                 0.2,
-                b as f64 + 0.9 * rng.gen::<f64>(),
+                f64::from(b) + 0.9 * rng.gen::<f64>(),
             );
             if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 if choose_mat < 0.8 {
@@ -133,7 +133,7 @@ fn main() {
         lookat,
         Vec3::new(0.0, 1.0, 0.0),
         15.0,
-        width as f64 / height as f64,
+        f64::from(width) / f64::from(height),
         aperture,
         dist_to_focus,
     );
@@ -148,16 +148,16 @@ fn main() {
                     let mut rng = rand::thread_rng();
                     let mut col = Vec3::new(0.0, 0.0, 0.0);
                     for _ in 0..ray_per_pixel {
-                        let u = (w as f64 + rng.gen::<f64>()) / width as f64;
-                        let v = (h as f64 + rng.gen::<f64>()) / height as f64;
+                        let u = (f64::from(w) + rng.gen::<f64>()) / f64::from(width);
+                        let v = (f64::from(h) + rng.gen::<f64>()) / f64::from(height);
                         let r = &camera.get_ray(u, v);
                         col = col + color(&r, &world, 0);
                     }
-                    col = col / ray_per_pixel as f64;
+                    col = col / f64::from(ray_per_pixel);
                     col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
-                    let ir = (max_color as f64 * col.x) as usize;
-                    let ig = (max_color as f64 * col.y) as usize;
-                    let ib = (max_color as f64 * col.z) as usize;
+                    let ir = (f64::from(max_color) * col.x) as usize;
+                    let ig = (f64::from(max_color) * col.y) as usize;
+                    let ib = (f64::from(max_color) * col.z) as usize;
                     format!("{} {} {}\n", ir, ig, ib)
                 })
                 .collect::<Vec<String>>()
@@ -169,8 +169,7 @@ fn main() {
     pic = format!("{}{}", &pic, pixels);
 
     println!(":: Writing the image");
-    match fs::write("output.ppm", pic) {
-        Err(_) => eprintln!("Could not generate the picture"),
-        Ok(_) => (),
+    if fs::write("output.ppm", pic).is_err() {
+        eprintln!("Could not generate the picture");
     };
 }

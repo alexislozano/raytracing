@@ -100,16 +100,13 @@ impl Hitable for HitableList {
         let mut closest_so_far = t_max;
         let mut res = None;
         for h in self.list.iter() {
-            match h.hit(r, t_min, closest_so_far) {
-                Some((hit_record, material)) => {
-                    closest_so_far = hit_record.t();
-                    res = Some((
-                        HitRecord::new(hit_record.t(), hit_record.p(), hit_record.normal()),
-                        material,
-                    ))
-                }
-                None => (),
-            };
+            if let Some((hit_record, material)) = h.hit(r, t_min, closest_so_far) {
+                closest_so_far = hit_record.t();
+                res = Some((
+                    HitRecord::new(hit_record.t(), hit_record.p(), hit_record.normal()),
+                    material,
+                ))
+            }
         }
         res
     }
